@@ -562,15 +562,7 @@
   async function loadCategories() {
     const snap = await getDocs(collection(db, 'categories'));
     categories = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    if (!categories.length) {
-      const defaults = [
-        { name: 'Bicicletas', color: 'green', order: 0 },
-        { name: 'Móveis',     color: 'amber', order: 1 },
-        { name: 'Tecnologia', color: 'blue',  order: 2 },
-      ];
-      for (const c of defaults) await addDoc(collection(db, 'categories'), c);
-      return loadCategories();
-    }
+
     categories.sort((a,b) => (a.order||0) - (b.order||0));
     renderCategories();
   }

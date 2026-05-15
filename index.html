@@ -351,7 +351,7 @@
 </header>
 
 <!-- ══ STATS BAR ══ -->
-<div class="stats-bar">
+<div class="stats-bar" id="stats-bar">
   <div class="stat">
     <div class="stat-icon">
       <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 014.5 12 19.79 19.79 0 011.21 3.18 2 2 0 013.22 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.09 8.91A16 16 0 0015.09 16.91l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
@@ -464,17 +464,30 @@
     document.getElementById('contact-btn').href = `https://wa.me/${phone}`;
 
     // Diferenciais
-    const diferenciais = d.diferenciais || [
-      { title: 'Atendimento via WhatsApp', desc: 'Resposta rápida e direta' },
-      { title: 'Combina entrega ou retirada', desc: 'Na sua conveniência' },
+    const iconSvgs = {
+      whatsapp: `<path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 014.5 12 19.79 19.79 0 011.21 3.18 2 2 0 013.22 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.09 8.91A16 16 0 0015.09 16.91l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/>`,
+      clock:    `<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>`,
+      shield:   `<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>`,
+      star:     `<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>`,
+      truck:    `<rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>`,
+      tag:      `<path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>`,
+      heart:    `<path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>`,
+      check:    `<path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>`,
+      map:      `<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>`,
+      gift:     `<polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><path d="M12 22V7m0-5s-2 2-2 5h4c0-3-2-5-2-5z"/>`,
+    };
+    const savedDiferenciais = d.diferenciais || [
+      { icon: 'whatsapp', title: 'Atendimento via WhatsApp', desc: 'Resposta rápida e direta' },
+      { icon: 'clock',    title: 'Combina entrega ou retirada', desc: 'Na sua conveniência' },
     ];
-    const items = document.querySelectorAll('.stat');
-    diferenciais.forEach((item, i) => {
-      if (items[i]) {
-        items[i].querySelector('strong').textContent = item.title || '';
-        items[i].querySelector('strong').nextSibling.textContent = item.desc || '';
-      }
-    });
+    const statsBar = document.getElementById('stats-bar');
+    statsBar.innerHTML = savedDiferenciais.map(item => `
+      <div class="stat">
+        <div class="stat-icon">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">${iconSvgs[item.icon] || iconSvgs.star}</svg>
+        </div>
+        <div><strong>${item.title || ''}</strong>${item.desc || ''}</div>
+      </div>`).join('');
   }
 
   function renderFilters() {

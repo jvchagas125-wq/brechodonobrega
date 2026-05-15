@@ -209,7 +209,17 @@
     const activeCat = activeBtn ? activeBtn.dataset.category : 'all';
 
     const filtersBar = document.getElementById('filters-bar');
-    filtersBar.innerHTML = '<button class="filter-btn" data-category="all">Todos</button>';
+    filtersBar.innerHTML = '';
+
+    // Only show filters if there are categories
+    if (!categories.length) return;
+
+    const todosBtn = document.createElement('button');
+    todosBtn.className = 'filter-btn';
+    todosBtn.dataset.category = 'all';
+    todosBtn.textContent = 'Todos';
+    filtersBar.appendChild(todosBtn);
+
     categories.forEach(cat => {
       const btn = document.createElement('button');
       btn.className = 'filter-btn';
@@ -254,19 +264,21 @@
 
     active.forEach(p => {
       const cat       = categories.find(c => c.id === p.category);
-      const badgeCls  = cat ? (colorMap[cat.color] || 'badge-gray') : 'badge-gray';
-      const badgeName = cat ? cat.name : (p.category || '');
+      // Only show badge if category exists and has a valid name
+      const badgeHTML = cat
+        ? `<span class="card-badge ${colorMap[cat.color] || 'badge-gray'}">${cat.name}</span>`
+        : '';
       const thumbHTML = p.imgs?.[0]
         ? `<img src="${p.imgs[0]}" alt="${p.name}" loading="lazy">`
         : `<div class="card-placeholder"><svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>Sem foto</div>`;
 
       const div = document.createElement('div');
       div.className = 'product-card';
-      div.dataset.category = p.category;
+      div.dataset.category = p.category || '';
       div.innerHTML = `
         <div class="card-img-wrap">${thumbHTML}</div>
         <div class="card-body">
-          <span class="card-badge ${badgeCls}">${badgeName}</span>
+          ${badgeHTML}
           <div class="card-name">${p.name}</div>
           <button class="card-ver-mais">
             Ver mais
@@ -343,8 +355,14 @@
 
     const cat = categories.find(c => c.id === p.category);
     const badgeEl = document.getElementById('modal-badge');
-    badgeEl.textContent = cat ? cat.name : (p.category || '');
-    badgeEl.className   = 'modal-badge ' + (cat ? (colorMap[cat.color] || 'badge-gray') : 'badge-gray');
+    if (cat) {
+      badgeEl.textContent = cat.name;
+      badgeEl.className   = 'modal-badge ' + (colorMap[cat.color] || 'badge-gray');
+      badgeEl.style.display = '';
+    } else {
+      badgeEl.textContent = '';
+      badgeEl.style.display = 'none';
+    }
 
     const msg = encodeURIComponent(`Olá Luciano, estou interessado no(a) ${p.name}`);
     document.getElementById('modal-whatsapp').href = `https://wa.me/${phone}?text=${msg}`;

@@ -361,6 +361,50 @@
             Salvar Cabeçalho
           </button>
         </div>
+
+        <div class="card">
+          <div class="card-title">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+            Barra de Diferenciais
+          </div>
+          <p style="font-size:0.82rem;color:var(--sub);margin-bottom:16px;">Edite os dois itens que aparecem logo abaixo do cabeçalho na vitrine.</p>
+
+          <div style="display:flex;flex-direction:column;gap:16px;">
+            <!-- Diferencial 1 -->
+            <div style="background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:16px;">
+              <div style="font-size:0.82rem;font-weight:700;color:var(--sub);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.06em;">Item 1</div>
+              <div class="form-row">
+                <div class="form-group-admin">
+                  <label class="form-label-admin">Título</label>
+                  <input id="d1-title" class="form-input-admin" type="text" placeholder="Atendimento via WhatsApp">
+                </div>
+                <div class="form-group-admin">
+                  <label class="form-label-admin">Descrição</label>
+                  <input id="d1-desc" class="form-input-admin" type="text" placeholder="Resposta rápida e direta">
+                </div>
+              </div>
+            </div>
+            <!-- Diferencial 2 -->
+            <div style="background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:16px;">
+              <div style="font-size:0.82rem;font-weight:700;color:var(--sub);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.06em;">Item 2</div>
+              <div class="form-row">
+                <div class="form-group-admin">
+                  <label class="form-label-admin">Título</label>
+                  <input id="d2-title" class="form-input-admin" type="text" placeholder="Combina entrega ou retirada">
+                </div>
+                <div class="form-group-admin">
+                  <label class="form-label-admin">Descrição</label>
+                  <input id="d2-desc" class="form-input-admin" type="text" placeholder="Na sua conveniência">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" style="margin-top:16px;" onclick="saveDiferenciais()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Salvar Diferenciais
+          </button>
+        </div>
       </div>
 
       <!-- PAGE: PRODUCTS -->
@@ -731,6 +775,12 @@
       document.getElementById('c-text').value     = d.contact?.text        || '';
       document.getElementById('c-phone').value    = d.contact?.phone       || '';
       document.getElementById('c-btn-text').value = d.contact?.btnText     || '';
+      // Diferenciais
+      const diferenciais = d.diferenciais || [];
+      document.getElementById('d1-title').value = diferenciais[0]?.title || 'Atendimento via WhatsApp';
+      document.getElementById('d1-desc').value  = diferenciais[0]?.desc  || 'Resposta rápida e direta';
+      document.getElementById('d2-title').value = diferenciais[1]?.title || 'Combina entrega ou retirada';
+      document.getElementById('d2-desc').value  = diferenciais[1]?.desc  || 'Na sua conveniência';
     } else {
       await setDoc(doc(db, 'settings', 'main'), {
         header:  { title: 'Vitrine de Produtos', subtitle: 'Estou querendo vender alguns itens, caso esteja interessado me chame no WhatsApp ao clicar em algum produto ou ao final do site.', sectionTitle: 'Produtos à venda' },
@@ -769,7 +819,18 @@
     } catch(e) { showToast('Erro: ' + e.message, 'error'); }
   };
 
-  // ── CATEGORIES ────────────────────────────────────────────────
+  window.saveDiferenciais = async function() {
+    try {
+      const snap = await getDoc(doc(db, 'settings', 'main'));
+      const cur  = snap.exists() ? snap.data() : {};
+      await setDoc(doc(db, 'settings', 'main'), { ...cur, diferenciais: [
+        { title: document.getElementById('d1-title').value.trim(), desc: document.getElementById('d1-desc').value.trim() },
+        { title: document.getElementById('d2-title').value.trim(), desc: document.getElementById('d2-desc').value.trim() },
+      ]});
+      showToast('Diferenciais salvos!', 'success');
+      setSaveStatus('✓ Salvo');
+    } catch(e) { showToast('Erro: ' + e.message, 'error'); }
+  };
   async function loadCategories() {
     const snap = await getDocs(collection(db, 'categories'));
     categories = snap.docs.map(d => ({ id: d.id, ...d.data() }));

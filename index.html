@@ -414,6 +414,7 @@
     <div class="gallery-thumbs" id="gallery-thumbs"></div>
     <div class="modal-body">
       <span id="modal-badge" class="modal-badge"></span>
+      <div id="modal-sold-badge" style="display:none;background:#fee2e2;color:#dc2626;font-size:0.82rem;font-weight:800;padding:8px 16px;border-radius:10px;margin:10px 0;text-align:center;letter-spacing:0.04em;">🔴 Este produto já foi vendido</div>
       <div id="modal-name"></div>
       <div id="modal-price"></div>
       <p id="modal-desc"></p>
@@ -539,8 +540,13 @@
     active.forEach((p, i) => {
       const cat = categories.find(c => c.id === p.category);
       const badgeHTML = cat ? `<span class="card-badge ${colorMap[cat.color]||'badge-gray'}">${cat.name}</span>` : '';
+      const soldOverlay = p.sold
+        ? `<div style="position:absolute;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:2;">
+             <span style="background:#dc2626;color:#fff;font-size:0.82rem;font-weight:800;padding:7px 18px;border-radius:100px;letter-spacing:0.05em;text-transform:uppercase;box-shadow:0 2px 12px rgba(220,38,38,0.5);">🔴 Vendido</span>
+           </div>`
+        : '';
       const thumbHTML = p.imgs?.[0]
-        ? `<img src="${p.imgs[0]}" alt="${p.name}" loading="lazy">`
+        ? `<img src="${p.imgs[0]}" alt="${p.name}" loading="lazy" style="${p.sold?'filter:grayscale(0.4);':''}">`
         : `<div class="card-placeholder"><svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>Sem foto</div>`;
 
       const div = document.createElement('div');
@@ -548,14 +554,14 @@
       div.dataset.category = p.category || '';
       div.style.animationDelay = `${i * 0.05}s`;
       div.innerHTML = `
-        <div class="card-img-wrap">${thumbHTML}</div>
+        <div class="card-img-wrap">${thumbHTML}${soldOverlay}</div>
         <div class="card-body">
           ${badgeHTML}
           <div class="card-name">${p.name}</div>
-          <button class="card-ver-mais">
+          ${p.sold ? '' : `<button class="card-ver-mais">
             Ver mais
             <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
-          </button>
+          </button>`}
         </div>`;
       div.addEventListener('click', () => openModal(p));
       grid.appendChild(div);
@@ -611,6 +617,15 @@
     document.getElementById('modal-name').textContent  = p.name;
     document.getElementById('modal-price').textContent = p.price || '';
     document.getElementById('modal-desc').textContent  = p.desc  || '';
+
+    // Sold badge in modal
+    const soldEl = document.getElementById('modal-sold-badge');
+    if (p.sold) {
+      soldEl.style.display = '';
+    } else {
+      soldEl.style.display = 'none';
+    }
+    document.getElementById('modal-whatsapp').style.display = p.sold ? 'none' : '';
 
     const cat = categories.find(c => c.id === p.category);
     const badgeEl = document.getElementById('modal-badge');

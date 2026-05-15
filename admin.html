@@ -591,7 +591,7 @@
            signOut, onAuthStateChanged }                from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
   import { getFirestore, doc, getDoc, setDoc,
            collection, getDocs, addDoc, updateDoc,
-           deleteDoc, serverTimestamp }                 from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+           deleteDoc, serverTimestamp, onSnapshot }   from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyANzwY6aNR7DfjNybjHQUN9AJ-dgnc_nAc",
@@ -757,7 +757,7 @@
   async function loadAll() {
     await loadSettings();
     await loadCategories();
-    await loadProducts();
+    loadProducts();
   }
 
   // ── SETTINGS ──────────────────────────────────────────────────
@@ -957,11 +957,12 @@
   };
 
   // ── PRODUCTS ──────────────────────────────────────────────────
-  async function loadProducts() {
-    const snap = await getDocs(collection(db, 'products'));
-    products = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    products.sort((a,b) => (a.order||0) - (b.order||0));
-    renderProducts();
+  function loadProducts() {
+    onSnapshot(collection(db, 'products'), snap => {
+      products = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      products.sort((a,b) => (a.order||0) - (b.order||0));
+      renderProducts();
+    });
   }
 
   function renderProducts() {
@@ -996,10 +997,10 @@
             </div>
             <div class="toggle-wrap">
               <label class="toggle">
-                <input type="checkbox" ${p.sold?'checked':''} onchange="toggleSold('${p.id}',this.checked)" style="accent-color:#dc2626;">
+                <input type="checkbox" ${p.sold?'checked':''} onchange="toggleSold('${p.id}',this.checked)">
                 <span class="toggle-slider" style="${p.sold?'background:#dc2626;':''}"></span>
               </label>
-              <span style="min-width:46px;">${p.sold?'<span style=\'color:#dc2626;font-weight:700;\'>Vendido</span>':'Disponível'}</span>
+              <span style="min-width:56px;${p.sold?'color:#dc2626;font-weight:700;':'color:var(--sub);'}">${p.sold?'🔴 Vendido':'Vendido?'}</span>
             </div>
           </div>
           <div class="product-item-actions">

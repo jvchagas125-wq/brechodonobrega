@@ -380,43 +380,18 @@
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
             Barra de Diferenciais
           </div>
-          <p style="font-size:0.82rem;color:var(--sub);margin-bottom:16px;">Edite os dois itens que aparecem logo abaixo do cabeçalho na vitrine.</p>
-
-          <div style="display:flex;flex-direction:column;gap:16px;">
-            <!-- Diferencial 1 -->
-            <div style="background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:16px;">
-              <div style="font-size:0.82rem;font-weight:700;color:var(--sub);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.06em;">Item 1</div>
-              <div class="form-row">
-                <div class="form-group-admin">
-                  <label class="form-label-admin">Título</label>
-                  <input id="d1-title" class="form-input-admin" type="text" placeholder="Atendimento via WhatsApp">
-                </div>
-                <div class="form-group-admin">
-                  <label class="form-label-admin">Descrição</label>
-                  <input id="d1-desc" class="form-input-admin" type="text" placeholder="Resposta rápida e direta">
-                </div>
-              </div>
-            </div>
-            <!-- Diferencial 2 -->
-            <div style="background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:16px;">
-              <div style="font-size:0.82rem;font-weight:700;color:var(--sub);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.06em;">Item 2</div>
-              <div class="form-row">
-                <div class="form-group-admin">
-                  <label class="form-label-admin">Título</label>
-                  <input id="d2-title" class="form-input-admin" type="text" placeholder="Combina entrega ou retirada">
-                </div>
-                <div class="form-group-admin">
-                  <label class="form-label-admin">Descrição</label>
-                  <input id="d2-desc" class="form-input-admin" type="text" placeholder="Na sua conveniência">
-                </div>
-              </div>
-            </div>
+          <p style="font-size:0.82rem;color:var(--sub);margin-bottom:16px;">Gerencie os itens que aparecem logo abaixo do cabeçalho na vitrine.</p>
+          <div id="diferenciais-list" style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px;"></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button class="btn btn-ghost" onclick="addDiferencial()">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Adicionar item
+            </button>
+            <button class="btn btn-primary" onclick="saveDiferenciais()">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              Salvar Diferenciais
+            </button>
           </div>
-
-          <button class="btn btn-primary" style="margin-top:16px;" onclick="saveDiferenciais()">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-            Salvar Diferenciais
-          </button>
         </div>
       </div>
 
@@ -789,11 +764,9 @@
       document.getElementById('c-phone').value    = d.contact?.phone       || '';
       document.getElementById('c-btn-text').value = d.contact?.btnText     || '';
       // Diferenciais
-      const diferenciais = d.diferenciais || [];
-      document.getElementById('d1-title').value = diferenciais[0]?.title || 'Atendimento via WhatsApp';
-      document.getElementById('d1-desc').value  = diferenciais[0]?.desc  || 'Resposta rápida e direta';
-      document.getElementById('d2-title').value = diferenciais[1]?.title || 'Combina entrega ou retirada';
-      document.getElementById('d2-desc').value  = diferenciais[1]?.desc  || 'Na sua conveniência';
+      const saved = d.diferenciais;
+      if (saved && saved.length) diferenciais = saved;
+      renderDiferenciais();
     } else {
       await setDoc(doc(db, 'settings', 'main'), {
         header:  { title: 'Vitrine de Produtos', subtitle: 'Estou querendo vender alguns itens, caso esteja interessado me chame no WhatsApp ao clicar em algum produto ou ao final do site.', sectionTitle: 'Produtos à venda' },
@@ -832,18 +805,88 @@
     } catch(e) { showToast('Erro: ' + e.message, 'error'); }
   };
 
+  // ── DIFERENCIAIS ──────────────────────────────────────────────
+  let diferenciais = [
+    { icon: 'whatsapp', title: 'Atendimento via WhatsApp', desc: 'Resposta rápida e direta' },
+    { icon: 'clock',    title: 'Combina entrega ou retirada', desc: 'Na sua conveniência' },
+  ];
+
+  const iconOptions = [
+    { value: 'whatsapp', label: '📱 WhatsApp',    svg: `<path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 014.5 12 19.79 19.79 0 011.21 3.18 2 2 0 013.22 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.09 8.91A16 16 0 0015.09 16.91l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/>` },
+    { value: 'clock',   label: '🕐 Relógio',      svg: `<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>` },
+    { value: 'shield',  label: '🛡️ Escudo',       svg: `<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>` },
+    { value: 'star',    label: '⭐ Estrela',       svg: `<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>` },
+    { value: 'truck',   label: '🚚 Entrega',       svg: `<rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>` },
+    { value: 'tag',     label: '🏷️ Preço',        svg: `<path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>` },
+    { value: 'heart',   label: '❤️ Qualidade',    svg: `<path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>` },
+    { value: 'check',   label: '✅ Verificado',   svg: `<path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>` },
+    { value: 'map',     label: '📍 Localização',  svg: `<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>` },
+    { value: 'gift',    label: '🎁 Presente',     svg: `<polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><path d="M12 22V7m0-5s-2 2-2 5h4c0-3-2-5-2-5z"/>` },
+  ];
+
+  function renderDiferenciais() {
+    const list = document.getElementById('diferenciais-list');
+    list.innerHTML = '';
+    if (!diferenciais.length) {
+      list.innerHTML = '<p style="color:var(--sub);font-size:0.85rem;padding:8px 0;">Nenhum item adicionado ainda.</p>';
+      return;
+    }
+    diferenciais.forEach((d, i) => {
+      const div = document.createElement('div');
+      div.style.cssText = 'background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:16px;';
+      div.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <span style="font-size:0.78rem;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:0.06em;">Item ${i+1}</span>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="removeDiferencial(${i})" title="Remover">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+          </button>
+        </div>
+        <div class="form-group-admin">
+          <label class="form-label-admin">Ícone</label>
+          <select class="form-select-admin" data-i="${i}" data-field="icon" onchange="updateDiferencial(this)">
+            ${iconOptions.map(o => `<option value="${o.value}" ${o.value===d.icon?'selected':''}>${o.label}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group-admin">
+            <label class="form-label-admin">Título</label>
+            <input class="form-input-admin" data-i="${i}" data-field="title" value="${d.title||''}" placeholder="Ex: Entrega rápida" oninput="updateDiferencial(this)">
+          </div>
+          <div class="form-group-admin">
+            <label class="form-label-admin">Descrição</label>
+            <input class="form-input-admin" data-i="${i}" data-field="desc" value="${d.desc||''}" placeholder="Ex: Na sua conveniência" oninput="updateDiferencial(this)">
+          </div>
+        </div>`;
+      list.appendChild(div);
+    });
+  }
+
+  window.updateDiferencial = function(el) {
+    diferenciais[parseInt(el.dataset.i)][el.dataset.field] = el.value;
+  };
+
+  window.addDiferencial = function() {
+    diferenciais.push({ icon: 'star', title: '', desc: '' });
+    renderDiferenciais();
+  };
+
+  window.removeDiferencial = async function(i) {
+    const ok = await showConfirm(`Remover "${diferenciais[i].title || 'Item ' + (i+1)}"?`, 'Remover Diferencial', 'Remover');
+    if (!ok) return;
+    diferenciais.splice(i, 1);
+    renderDiferenciais();
+  };
+
   window.saveDiferenciais = async function() {
     try {
       const snap = await getDoc(doc(db, 'settings', 'main'));
       const cur  = snap.exists() ? snap.data() : {};
-      await setDoc(doc(db, 'settings', 'main'), { ...cur, diferenciais: [
-        { title: document.getElementById('d1-title').value.trim(), desc: document.getElementById('d1-desc').value.trim() },
-        { title: document.getElementById('d2-title').value.trim(), desc: document.getElementById('d2-desc').value.trim() },
-      ]});
+      await setDoc(doc(db, 'settings', 'main'), { ...cur, diferenciais });
       showToast('Diferenciais salvos!', 'success');
       setSaveStatus('✓ Salvo');
     } catch(e) { showToast('Erro: ' + e.message, 'error'); }
   };
+
   async function loadCategories() {
     const snap = await getDocs(collection(db, 'categories'));
     categories = snap.docs.map(d => ({ id: d.id, ...d.data() }));

@@ -1,0 +1,751 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin – Vitrine de Produtos</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f1f5f9;
+      --white: #fff;
+      --dark: #1a1a2e;
+      --accent: #059669;
+      --accent-h: #047857;
+      --danger: #dc2626;
+      --danger-h: #b91c1c;
+      --amber: #d97706;
+      --blue: #2563eb;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --sub: #64748b;
+      --radius: 12px;
+      --shadow: 0 1px 6px rgba(0,0,0,0.08);
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      background: var(--dark);
+      padding: 0 28px;
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+    }
+    .topbar-brand { color: #fff; font-weight: 700; font-size: 1rem; display: flex; align-items: center; gap: 10px; }
+    .topbar-brand span { background: var(--accent); color: #fff; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 100px; letter-spacing: 0.05em; }
+    .topbar-actions { display: flex; gap: 10px; }
+    .btn-preview { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; font-size: 0.82rem; font-weight: 600; padding: 7px 16px; border-radius: 8px; cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 6px; transition: background 0.2s; }
+    .btn-preview:hover { background: rgba(255,255,255,0.18); }
+    .btn-save { background: var(--accent); border: none; color: #fff; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 700; padding: 7px 18px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: background 0.2s; }
+    .btn-save:hover { background: var(--accent-h); }
+
+    /* ── LAYOUT ── */
+    .layout { display: flex; min-height: calc(100vh - 58px); }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 220px;
+      flex-shrink: 0;
+      background: var(--white);
+      border-right: 1px solid var(--border);
+      padding: 20px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .sidebar-label { font-size: 10px; font-weight: 700; color: var(--sub); letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 10px 4px; }
+    .nav-btn { display: flex; align-items: center; gap: 10px; background: none; border: none; color: var(--sub); font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 500; padding: 9px 12px; border-radius: 8px; cursor: pointer; width: 100%; text-align: left; transition: all 0.15s; }
+    .nav-btn svg { flex-shrink: 0; }
+    .nav-btn:hover { background: var(--bg); color: var(--text); }
+    .nav-btn.active { background: #ecfdf5; color: var(--accent); font-weight: 700; }
+
+    /* ── CONTENT ── */
+    .content { flex: 1; padding: 28px; overflow-y: auto; }
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .page-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 6px; }
+    .page-sub { color: var(--sub); font-size: 0.88rem; margin-bottom: 24px; }
+
+    /* ── CARDS ── */
+    .card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px 24px; box-shadow: var(--shadow); margin-bottom: 18px; }
+    .card-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+
+    /* ── FORM ── */
+    .form-group { margin-bottom: 16px; }
+    .form-label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--sub); margin-bottom: 6px; letter-spacing: 0.02em; }
+    .form-input, .form-textarea, .form-select {
+      width: 100%;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      color: var(--text);
+      transition: border-color 0.15s;
+      outline: none;
+    }
+    .form-input:focus, .form-textarea:focus, .form-select:focus { border-color: var(--accent); background: #fff; }
+    .form-textarea { resize: vertical; min-height: 90px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 640px) { .form-row { grid-template-columns: 1fr; } }
+
+    /* ── BUTTONS ── */
+    .btn { display: inline-flex; align-items: center; gap: 7px; border: none; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 0.85rem; padding: 9px 16px; cursor: pointer; transition: all 0.18s; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-h); }
+    .btn-danger { background: #fee2e2; color: var(--danger); }
+    .btn-danger:hover { background: var(--danger); color: #fff; }
+    .btn-ghost { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--border); }
+    .btn-sm { font-size: 0.78rem; padding: 6px 12px; }
+    .btn-icon { padding: 7px; border-radius: 7px; }
+
+    /* ── PRODUCT LIST ── */
+    .product-list { display: flex; flex-direction: column; gap: 12px; }
+    .product-item {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: border-color 0.15s;
+    }
+    .product-item:hover { border-color: #cbd5e1; }
+    .product-item-thumb {
+      width: 56px; height: 44px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: var(--bg);
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    .product-item-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .product-item-thumb svg { opacity: 0.3; }
+    .product-item-info { flex: 1; min-width: 0; }
+    .product-item-name { font-weight: 700; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .product-item-meta { font-size: 0.78rem; color: var(--sub); margin-top: 2px; display: flex; align-items: center; gap: 8px; }
+    .product-item-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+    /* Toggle */
+    .toggle-wrap { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--sub); }
+    .toggle { position: relative; width: 38px; height: 22px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; inset: 0; background: #cbd5e1; border-radius: 100px; cursor: pointer; transition: background 0.2s; }
+    .toggle-slider::before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+    .toggle input:checked + .toggle-slider { background: var(--accent); }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(16px); }
+
+    /* Badge preview */
+    .badge-preview { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 100px; }
+    .badge-green  { color: #059669; background: #d1fae5; }
+    .badge-amber  { color: #b45309; background: #fef3c7; }
+    .badge-blue   { color: #1d4ed8; background: #dbeafe; }
+    .badge-purple { color: #7c3aed; background: #ede9fe; }
+    .badge-red    { color: #dc2626; background: #fee2e2; }
+    .badge-gray   { color: #374151; background: #f3f4f6; }
+
+    /* ── MODAL EDITOR ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 200; display: none; align-items: center; justify-content: center; padding: 16px; overflow-y: auto; }
+    .modal-overlay.open { display: flex; }
+    .modal-box { background: var(--white); border-radius: 16px; width: 100%; max-width: 600px; margin: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2); animation: slideUp 0.25s ease; max-height: 90vh; overflow-y: auto; }
+    .modal-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: var(--white); z-index: 1; border-radius: 16px 16px 0 0; }
+    .modal-header h3 { font-size: 1rem; font-weight: 700; }
+    .modal-body-inner { padding: 20px 24px 24px; }
+    .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
+    .btn-close-modal { background: none; border: none; color: var(--sub); cursor: pointer; padding: 4px; border-radius: 6px; }
+    .btn-close-modal:hover { background: var(--bg); color: var(--text); }
+
+    /* ── PHOTO UPLOAD ── */
+    .photos-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+    .photo-thumb {
+      width: 90px; height: 70px;
+      border-radius: 8px;
+      overflow: hidden;
+      position: relative;
+      border: 1.5px solid var(--border);
+      background: var(--bg);
+    }
+    .photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .photo-thumb-remove {
+      position: absolute;
+      top: 3px; right: 3px;
+      background: rgba(220,38,38,0.85);
+      border: none; color: #fff;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      font-size: 12px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .photo-thumb-remove:hover { background: var(--danger); }
+    .upload-area {
+      border: 2px dashed var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      color: var(--sub);
+      font-size: 0.85rem;
+      margin-top: 10px;
+    }
+    .upload-area:hover { border-color: var(--accent); background: #f0fdf4; color: var(--accent); }
+    .upload-area input { display: none; }
+    .upload-progress { margin-top: 8px; font-size: 0.8rem; color: var(--accent); display: none; }
+
+    /* ── CATEGORY LIST ── */
+    .cat-list { display: flex; flex-direction: column; gap: 10px; }
+    .cat-item { display: flex; align-items: center; gap: 12px; background: var(--bg); border: 1.5px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+    .cat-item-info { flex: 1; display: flex; align-items: center; gap: 10px; }
+    .cat-item-actions { display: flex; gap: 6px; }
+
+    /* ── TOAST ── */
+    .toast { position: fixed; bottom: 24px; right: 24px; background: var(--dark); color: #fff; font-size: 0.88rem; font-weight: 500; padding: 12px 20px; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.25); z-index: 9999; opacity: 0; transform: translateY(10px); transition: all 0.3s; pointer-events: none; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { background: var(--accent); }
+    .toast.error { background: var(--danger); }
+
+    @keyframes slideUp { from { opacity:0; transform: translateY(16px); } to { opacity:1; transform: none; } }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 700px) {
+      .sidebar { display: none; }
+      .content { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-brand">
+    ⚙️ Painel Admin <span>ADMIN</span>
+  </div>
+  <div class="topbar-actions">
+    <a href="index.html" target="_blank" class="btn-preview">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      Ver Vitrine
+    </a>
+    <button class="btn-save" onclick="saveAll()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      Salvar Tudo
+    </button>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-label">Conteúdo</div>
+    <button class="nav-btn active" onclick="showPage('page-header')">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="7" rx="2"/></svg>
+      Cabeçalho
+    </button>
+    <button class="nav-btn" onclick="showPage('page-products')">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      Produtos
+    </button>
+    <button class="nav-btn" onclick="showPage('page-categories')">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+      Categorias
+    </button>
+    <button class="nav-btn" onclick="showPage('page-contact')">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 014.5 12 19.79 19.79 0 011.21 3.18 2 2 0 013.22 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.09 8.91A16 16 0 0015.09 16.91l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+      Contato
+    </button>
+  </nav>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- PAGE: HEADER -->
+    <div id="page-header" class="page active">
+      <div class="page-title">Cabeçalho da Vitrine</div>
+      <div class="page-sub">Edite o título e a descrição exibidos no topo do site.</div>
+      <div class="card">
+        <div class="card-title">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="7" rx="2"/></svg>
+          Textos do Cabeçalho
+        </div>
+        <div class="form-group">
+          <label class="form-label">Título principal</label>
+          <input id="h-title" class="form-input" type="text" placeholder="Vitrine de Produtos">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Subtítulo / Descrição</label>
+          <textarea id="h-subtitle" class="form-textarea" placeholder="Estou querendo vender alguns itens..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Título da seção de produtos</label>
+          <input id="h-section" class="form-input" type="text" placeholder="Produtos à venda">
+        </div>
+        <button class="btn btn-primary" onclick="saveAll()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          Salvar
+        </button>
+      </div>
+    </div>
+
+    <!-- PAGE: PRODUCTS -->
+    <div id="page-products" class="page">
+      <div class="page-title">Produtos</div>
+      <div class="page-sub">Adicione, edite ou remova produtos da vitrine.</div>
+      <div style="display:flex; justify-content:flex-end; margin-bottom:16px;">
+        <button class="btn btn-primary" onclick="openProductModal(null)">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Novo Produto
+        </button>
+      </div>
+      <div class="product-list" id="product-list"></div>
+    </div>
+
+    <!-- PAGE: CATEGORIES -->
+    <div id="page-categories" class="page">
+      <div class="page-title">Categorias</div>
+      <div class="page-sub">Gerencie as categorias disponíveis para os produtos.</div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-title">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nova Categoria
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Nome da categoria</label>
+            <input id="new-cat-name" class="form-input" type="text" placeholder="Ex: Roupas">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Cor do badge</label>
+            <select id="new-cat-color" class="form-select">
+              <option value="green">Verde</option>
+              <option value="amber">Amarelo</option>
+              <option value="blue">Azul</option>
+              <option value="purple">Roxo</option>
+              <option value="red">Vermelho</option>
+              <option value="gray">Cinza</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="addCategory()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Adicionar Categoria
+        </button>
+      </div>
+      <div class="cat-list" id="cat-list"></div>
+    </div>
+
+    <!-- PAGE: CONTACT -->
+    <div id="page-contact" class="page">
+      <div class="page-title">Seção de Contato</div>
+      <div class="page-sub">Edite os textos e o número do WhatsApp exibidos no rodapé.</div>
+      <div class="card">
+        <div class="card-title">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 014.5 12 19.79 19.79 0 011.21 3.18 2 2 0 013.22 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.09 8.91A16 16 0 0015.09 16.91l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+          Dados de Contato
+        </div>
+        <div class="form-group">
+          <label class="form-label">Título da seção</label>
+          <input id="c-title" class="form-input" type="text" placeholder="Entre em Contato">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Texto descritivo</label>
+          <textarea id="c-text" class="form-textarea" placeholder="Ficou interessado em algum produto?..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Número do WhatsApp (somente números, com DDI)</label>
+          <input id="c-phone" class="form-input" type="text" placeholder="5522999649966">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Texto exibido no botão WhatsApp</label>
+          <input id="c-btn-text" class="form-input" type="text" placeholder="Chamar no WhatsApp">
+        </div>
+        <button class="btn btn-primary" onclick="saveAll()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          Salvar
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL: PRODUCT EDITOR -->
+<div class="modal-overlay" id="product-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="modal-title">Novo Produto</h3>
+      <button class="btn-close-modal" onclick="closeProductModal()">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body-inner">
+      <input type="hidden" id="edit-id">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nome do produto</label>
+          <input id="edit-name" class="form-input" type="text" placeholder="Ex: Mountain Bike Aro 29">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Preço</label>
+          <input id="edit-price" class="form-input" type="text" placeholder="Ex: R$ 1.800,00">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Categoria</label>
+          <select id="edit-category" class="form-select"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select id="edit-active" class="form-select">
+            <option value="true">✅ Ativo (visível na vitrine)</option>
+            <option value="false">🚫 Inativo (oculto)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descrição / Especificações</label>
+        <textarea id="edit-desc" class="form-textarea" placeholder="Descreva o produto, estado de conservação, especificações..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Fotos do produto</label>
+        <div class="photos-grid" id="photos-grid"></div>
+        <div class="upload-area" id="upload-area" onclick="document.getElementById('file-input').click()">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 8px; display:block; opacity:0.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Clique para fazer upload de fotos<br>
+          <small style="opacity:0.6">JPG, PNG, WebP — múltiplas permitidas</small>
+          <input type="file" id="file-input" accept="image/*" multiple onchange="uploadFiles(this.files)">
+        </div>
+        <div class="upload-progress" id="upload-progress">Enviando fotos...</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeProductModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveProduct()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        Salvar Produto
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  const CLOUD_NAME = 'dcvhqnr1c';
+  const UPLOAD_PRESET = 'vitrine_de_produtos';
+
+  // ── DEFAULT DATA ──────────────────────────────────────────────
+  const defaultData = {
+    header: {
+      title: 'Vitrine de Produtos',
+      subtitle: 'Estou querendo vender alguns itens, caso esteja interessado me chame no WhatsApp ao clicar em algum produto ou ao final do site.',
+      sectionTitle: 'Produtos à venda'
+    },
+    contact: {
+      title: 'Entre em Contato',
+      text: 'Ficou interessado em algum produto?\nMe chame no WhatsApp: +55 22 99964-9966',
+      phone: '5522999649966',
+      btnText: 'Chamar no WhatsApp'
+    },
+    categories: [
+      { id: 'bicicleta',  name: 'Bicicletas',  color: 'green' },
+      { id: 'moveis',     name: 'Móveis',       color: 'amber' },
+      { id: 'tecnologia', name: 'Tecnologia',   color: 'blue'  },
+    ],
+    products: [
+      { id: '1', name: 'Mountain Bike Aro 29',         price: 'R$ 1.800,00', category: 'bicicleta',  desc: 'Mountain Bike aro 29, quadro em alumínio, 21 marchas Shimano, freio a disco hidráulico. Perfeita para trilhas e uso urbano. Pouco uso, excelente estado.', imgs: [], active: true },
+      { id: '2', name: 'Bicicleta Speed Road',          price: 'R$ 2.500,00', category: 'bicicleta',  desc: 'Bicicleta Speed Road, quadro carbono, câmbio Shimano 105, rodas aero. Ideal para treinos e competições. Estado impecável.', imgs: [], active: true },
+      { id: '3', name: 'Sofá 3 Lugares Retrátil',      price: 'R$ 2.200,00', category: 'moveis',     desc: 'Sofá 3 lugares retrátil e reclinável, tecido suede cinza. Muito confortável, sem manchas ou rasgos. Perfeito para sala de estar.', imgs: [], active: true },
+      { id: '4', name: 'Mesa de Jantar 6 Lugares',     price: 'R$ 1.500,00', category: 'moveis',     desc: 'Mesa de jantar em madeira maciça para 6 lugares, com cadeiras estofadas. Design moderno, ótimo estado de conservação.', imgs: [], active: true },
+      { id: '5', name: 'Notebook Dell Inspiron 15',    price: 'R$ 3.200,00', category: 'tecnologia', desc: 'Notebook Dell Inspiron 15, Intel Core i5, 8GB RAM, SSD 256GB, tela Full HD. Bateria excelente, sem riscos. Acompanha carregador original.', imgs: [], active: true },
+      { id: '6', name: 'Fone Bluetooth Sony WH-1000XM4', price: 'R$ 1.400,00', category: 'tecnologia', desc: 'Fone de ouvido Sony WH-1000XM4, cancelamento de ruído ativo, bateria 30h, som Hi-Res. Na caixa com todos os acessórios.', imgs: [], active: true },
+    ]
+  };
+
+  let data = JSON.parse(localStorage.getItem('vitrine_data') || 'null') || JSON.parse(JSON.stringify(defaultData));
+  let editingPhotos = []; // photos for current product being edited
+
+  // ── INIT ─────────────────────────────────────────────────────
+  function init() {
+    // Header
+    document.getElementById('h-title').value    = data.header.title;
+    document.getElementById('h-subtitle').value = data.header.subtitle;
+    document.getElementById('h-section').value  = data.header.sectionTitle;
+    // Contact
+    document.getElementById('c-title').value    = data.contact.title;
+    document.getElementById('c-text').value     = data.contact.text;
+    document.getElementById('c-phone').value    = data.contact.phone;
+    document.getElementById('c-btn-text').value = data.contact.btnText;
+    renderCategories();
+    renderProducts();
+  }
+
+  // ── NAVIGATION ───────────────────────────────────────────────
+  function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.currentTarget.classList.add('active');
+  }
+
+  // ── SAVE ALL ─────────────────────────────────────────────────
+  function saveAll() {
+    data.header.title        = document.getElementById('h-title').value.trim() || defaultData.header.title;
+    data.header.subtitle     = document.getElementById('h-subtitle').value.trim() || defaultData.header.subtitle;
+    data.header.sectionTitle = document.getElementById('h-section').value.trim() || defaultData.header.sectionTitle;
+    data.contact.title       = document.getElementById('c-title').value.trim() || defaultData.contact.title;
+    data.contact.text        = document.getElementById('c-text').value.trim() || defaultData.contact.text;
+    data.contact.phone       = document.getElementById('c-phone').value.trim() || defaultData.contact.phone;
+    data.contact.btnText     = document.getElementById('c-btn-text').value.trim() || defaultData.contact.btnText;
+    localStorage.setItem('vitrine_data', JSON.stringify(data));
+    showToast('Salvo com sucesso!', 'success');
+  }
+
+  // ── TOAST ────────────────────────────────────────────────────
+  function showToast(msg, type = '') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + type;
+    setTimeout(() => { t.className = 'toast'; }, 2800);
+  }
+
+  // ── CATEGORIES ───────────────────────────────────────────────
+  const colorMap = { green:'badge-green', amber:'badge-amber', blue:'badge-blue', purple:'badge-purple', red:'badge-red', gray:'badge-gray' };
+  const colorLabel = { green:'Verde', amber:'Amarelo', blue:'Azul', purple:'Roxo', red:'Vermelho', gray:'Cinza' };
+
+  function renderCategories() {
+    const el = document.getElementById('cat-list');
+    el.innerHTML = '';
+    data.categories.forEach((cat, i) => {
+      el.innerHTML += `
+        <div class="cat-item">
+          <div class="cat-item-info">
+            <span class="badge-preview ${colorMap[cat.color]}">${cat.name}</span>
+            <span style="font-size:0.78rem;color:var(--sub)">ID: ${cat.id}</span>
+          </div>
+          <div class="cat-item-actions">
+            <button class="btn btn-ghost btn-sm" onclick="editCategory(${i})">Editar</button>
+            <button class="btn btn-danger btn-sm" onclick="removeCategory(${i})">Remover</button>
+          </div>
+        </div>`;
+    });
+  }
+
+  function addCategory() {
+    const name  = document.getElementById('new-cat-name').value.trim();
+    const color = document.getElementById('new-cat-color').value;
+    if (!name) { showToast('Digite o nome da categoria', 'error'); return; }
+    const id = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
+    if (data.categories.find(c => c.id === id)) { showToast('Categoria já existe', 'error'); return; }
+    data.categories.push({ id, name, color });
+    document.getElementById('new-cat-name').value = '';
+    renderCategories();
+    saveAll();
+  }
+
+  function editCategory(i) {
+    const cat = data.categories[i];
+    const newName = prompt('Novo nome:', cat.name);
+    if (!newName) return;
+    data.categories[i].name = newName.trim();
+    renderCategories();
+    saveAll();
+  }
+
+  function removeCategory(i) {
+    if (!confirm(`Remover a categoria "${data.categories[i].name}"?`)) return;
+    data.categories.splice(i, 1);
+    renderCategories();
+    saveAll();
+  }
+
+  // ── PRODUCTS ─────────────────────────────────────────────────
+  function renderProducts() {
+    const el = document.getElementById('product-list');
+    el.innerHTML = '';
+    if (!data.products.length) {
+      el.innerHTML = '<p style="color:var(--sub);font-size:0.88rem;text-align:center;padding:30px 0;">Nenhum produto cadastrado ainda.</p>';
+      return;
+    }
+    data.products.forEach((p, i) => {
+      const cat = data.categories.find(c => c.id === p.category);
+      const thumb = p.imgs && p.imgs[0] ? `<img src="${p.imgs[0]}" alt="">` : `<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>`;
+      const badgeCls = cat ? colorMap[cat.color] : 'badge-gray';
+      const badgeName = cat ? cat.name : p.category;
+      el.innerHTML += `
+        <div class="product-item" id="pitem-${p.id}">
+          <div class="product-item-thumb">${thumb}</div>
+          <div class="product-item-info">
+            <div class="product-item-name">${p.name}</div>
+            <div class="product-item-meta">
+              <span class="badge-preview ${badgeCls}">${badgeName}</span>
+              <span>${p.price}</span>
+              <span>${p.imgs ? p.imgs.length : 0} foto(s)</span>
+            </div>
+          </div>
+          <div class="toggle-wrap">
+            <label class="toggle">
+              <input type="checkbox" ${p.active ? 'checked' : ''} onchange="toggleProduct('${p.id}', this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+            <span>${p.active ? 'Ativo' : 'Inativo'}</span>
+          </div>
+          <div class="product-item-actions">
+            <button class="btn btn-ghost btn-sm" onclick="openProductModal('${p.id}')">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Editar
+            </button>
+            <button class="btn btn-danger btn-sm btn-icon" onclick="removeProduct('${p.id}')" title="Remover">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+            </button>
+          </div>
+        </div>`;
+    });
+  }
+
+  function toggleProduct(id, active) {
+    const p = data.products.find(x => x.id === id);
+    if (p) { p.active = active; saveAll(); renderProducts(); }
+  }
+
+  function removeProduct(id) {
+    const p = data.products.find(x => x.id === id);
+    if (!p || !confirm(`Remover "${p.name}"?`)) return;
+    data.products = data.products.filter(x => x.id !== id);
+    saveAll();
+    renderProducts();
+  }
+
+  // ── PRODUCT MODAL ────────────────────────────────────────────
+  function populateCategorySelect(selectedId) {
+    const sel = document.getElementById('edit-category');
+    sel.innerHTML = data.categories.map(c => `<option value="${c.id}" ${c.id === selectedId ? 'selected' : ''}>${c.name}</option>`).join('');
+  }
+
+  function openProductModal(id) {
+    editingPhotos = [];
+    const modal = document.getElementById('product-modal');
+    modal.classList.add('open');
+
+    if (!id) {
+      // New
+      document.getElementById('modal-title').textContent = 'Novo Produto';
+      document.getElementById('edit-id').value    = '';
+      document.getElementById('edit-name').value  = '';
+      document.getElementById('edit-price').value = '';
+      document.getElementById('edit-desc').value  = '';
+      document.getElementById('edit-active').value = 'true';
+      populateCategorySelect('');
+      renderEditPhotos();
+    } else {
+      const p = data.products.find(x => x.id === id);
+      document.getElementById('modal-title').textContent = 'Editar Produto';
+      document.getElementById('edit-id').value    = p.id;
+      document.getElementById('edit-name').value  = p.name;
+      document.getElementById('edit-price').value = p.price;
+      document.getElementById('edit-desc').value  = p.desc;
+      document.getElementById('edit-active').value = p.active ? 'true' : 'false';
+      editingPhotos = [...(p.imgs || [])];
+      populateCategorySelect(p.category);
+      renderEditPhotos();
+    }
+  }
+
+  function closeProductModal() {
+    document.getElementById('product-modal').classList.remove('open');
+  }
+
+  function saveProduct() {
+    const id       = document.getElementById('edit-id').value;
+    const name     = document.getElementById('edit-name').value.trim();
+    const price    = document.getElementById('edit-price').value.trim();
+    const category = document.getElementById('edit-category').value;
+    const desc     = document.getElementById('edit-desc').value.trim();
+    const active   = document.getElementById('edit-active').value === 'true';
+
+    if (!name) { showToast('Digite o nome do produto', 'error'); return; }
+
+    if (!id) {
+      // New product
+      data.products.push({ id: Date.now().toString(), name, price, category, desc, imgs: [...editingPhotos], active });
+    } else {
+      const p = data.products.find(x => x.id === id);
+      if (p) { p.name = name; p.price = price; p.category = category; p.desc = desc; p.active = active; p.imgs = [...editingPhotos]; }
+    }
+
+    saveAll();
+    renderProducts();
+    closeProductModal();
+    showToast('Produto salvo!', 'success');
+  }
+
+  // ── PHOTOS ───────────────────────────────────────────────────
+  function renderEditPhotos() {
+    const grid = document.getElementById('photos-grid');
+    grid.innerHTML = '';
+    editingPhotos.forEach((url, i) => {
+      const div = document.createElement('div');
+      div.className = 'photo-thumb';
+      div.innerHTML = `<img src="${url}" alt=""><button class="photo-thumb-remove" onclick="removePhoto(${i})" title="Remover">✕</button>`;
+      grid.appendChild(div);
+    });
+  }
+
+  function removePhoto(i) {
+    editingPhotos.splice(i, 1);
+    renderEditPhotos();
+  }
+
+  async function uploadFiles(files) {
+    if (!files.length) return;
+    const progress = document.getElementById('upload-progress');
+    progress.style.display = 'block';
+    progress.textContent = `Enviando 0 de ${files.length}...`;
+
+    for (let i = 0; i < files.length; i++) {
+      try {
+        const formData = new FormData();
+        formData.append('file', files[i]);
+        formData.append('upload_preset', UPLOAD_PRESET);
+
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+          method: 'POST',
+          body: formData
+        });
+        const json = await res.json();
+        if (json.secure_url) {
+          editingPhotos.push(json.secure_url);
+          renderEditPhotos();
+          progress.textContent = `Enviando ${i + 1} de ${files.length}...`;
+        } else {
+          showToast('Erro ao enviar uma foto', 'error');
+        }
+      } catch (e) {
+        showToast('Erro de conexão ao enviar foto', 'error');
+      }
+    }
+
+    progress.style.display = 'none';
+    document.getElementById('file-input').value = '';
+    showToast(`${files.length} foto(s) enviada(s)!`, 'success');
+  }
+
+  // ── START ────────────────────────────────────────────────────
+  init();
+</script>
+</body>
+</html>

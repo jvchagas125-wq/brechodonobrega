@@ -499,10 +499,19 @@
           <select id="edit-category" class="form-select-admin"></select>
         </div>
         <div class="form-group-admin">
-          <label class="form-label-admin">Status</label>
+          <label class="form-label-admin">Visibilidade</label>
           <select id="edit-active" class="form-select-admin">
-            <option value="true">✅ Ativo (visível na vitrine)</option>
+            <option value="true">✅ Ativo (visível)</option>
             <option value="false">🚫 Inativo (oculto)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group-admin">
+          <label class="form-label-admin">Status de venda</label>
+          <select id="edit-sold" class="form-select-admin">
+            <option value="false">🟢 Disponível</option>
+            <option value="true">🔴 Vendido</option>
           </select>
         </div>
       </div>
@@ -964,23 +973,34 @@
       const thumb     = p.imgs?.[0] ? `<img src="${p.imgs[0]}" alt="">` : `<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>`;
       const badgeCls  = cat ? (colorMap[cat.color]||'badge-gray') : 'badge-gray';
       const badgeName = cat ? cat.name : (p.category||'—');
+      const soldBadge = p.sold ? `<span class="badge-preview" style="color:#dc2626;background:#fee2e2;">🔴 Vendido</span>` : '';
       el.innerHTML += `
-        <div class="product-item">
+        <div class="product-item" style="${p.sold ? 'opacity:0.7;' : ''}">
           <div class="product-item-thumb">${thumb}</div>
           <div class="product-item-info">
             <div class="product-item-name">${p.name}</div>
             <div class="product-item-meta">
               <span class="badge-preview ${badgeCls}">${badgeName}</span>
               <span>${p.price||''}</span>
+              ${soldBadge}
               <span>${p.imgs?.length||0} foto(s)</span>
             </div>
           </div>
-          <div class="toggle-wrap">
-            <label class="toggle">
-              <input type="checkbox" ${p.active?'checked':''} onchange="toggleProduct('${p.id}',this.checked)">
-              <span class="toggle-slider"></span>
-            </label>
-            <span>${p.active?'Ativo':'Inativo'}</span>
+          <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
+            <div class="toggle-wrap">
+              <label class="toggle">
+                <input type="checkbox" ${p.active?'checked':''} onchange="toggleProduct('${p.id}',this.checked)">
+                <span class="toggle-slider"></span>
+              </label>
+              <span style="min-width:46px;">${p.active?'Ativo':'Inativo'}</span>
+            </div>
+            <div class="toggle-wrap">
+              <label class="toggle">
+                <input type="checkbox" ${p.sold?'checked':''} onchange="toggleSold('${p.id}',this.checked)" style="accent-color:#dc2626;">
+                <span class="toggle-slider" style="${p.sold?'background:#dc2626;':''}"></span>
+              </label>
+              <span style="min-width:46px;">${p.sold?'<span style=\'color:#dc2626;font-weight:700;\'>Vendido</span>':'Disponível'}</span>
+            </div>
           </div>
           <div class="product-item-actions">
             <button class="btn btn-ghost btn-sm" onclick="openProductModal('${p.id}')">
@@ -1001,6 +1021,17 @@
       const p = products.find(x => x.id === id);
       if (p) p.active = active;
       renderProducts();
+      setSaveStatus('✓ Salvo');
+    } catch(e) { showToast('Erro: ' + e.message, 'error'); }
+  };
+
+  window.toggleSold = async function(id, sold) {
+    try {
+      await updateDoc(doc(db, 'products', id), { sold });
+      const p = products.find(x => x.id === id);
+      if (p) p.sold = sold;
+      renderProducts();
+      showToast(sold ? 'Produto marcado como vendido!' : 'Produto disponível novamente!', 'success');
       setSaveStatus('✓ Salvo');
     } catch(e) { showToast('Erro: ' + e.message, 'error'); }
   };
@@ -1032,6 +1063,7 @@
       document.getElementById('edit-price').value  = '';
       document.getElementById('edit-desc').value   = '';
       document.getElementById('edit-active').value = 'true';
+      document.getElementById('edit-sold').value   = 'false';
     } else {
       const p = products.find(x => x.id === id);
       if (!p) return;
@@ -1041,6 +1073,7 @@
       document.getElementById('edit-price').value  = p.price;
       document.getElementById('edit-desc').value   = p.desc || '';
       document.getElementById('edit-active').value = p.active ? 'true' : 'false';
+      document.getElementById('edit-sold').value   = p.sold   ? 'true' : 'false';
       editingPhotos = [...(p.imgs||[])];
       populateCategorySelect(p.category);
     }
@@ -1058,8 +1091,9 @@
     const category = document.getElementById('edit-category').value;
     const desc     = document.getElementById('edit-desc').value.trim();
     const active   = document.getElementById('edit-active').value === 'true';
+    const sold     = document.getElementById('edit-sold').value === 'true';
     if (!name) { showToast('Digite o nome do produto', 'error'); return; }
-    const payload = { name, price, category, desc, imgs: [...editingPhotos], active, updatedAt: serverTimestamp() };
+    const payload = { name, price, category, desc, imgs: [...editingPhotos], active, sold, updatedAt: serverTimestamp() };
     try {
       if (!id) {
         payload.order = products.length;

@@ -52,7 +52,9 @@
     .badge-red    { color: #dc2626; background: #fee2e2; }
     .badge-gray   { color: #374151; background: #f3f4f6; }
     .card-name { font-size: 1rem; font-weight: 600; color: var(--text); line-height: 1.35; margin-bottom: 6px; }
-    .card-price { font-size: 1rem; font-weight: 700; color: var(--accent); margin-top: auto; padding-top: 8px; }
+    .card-price { display: none; }
+    .card-ver-mais { display: inline-flex; align-items: center; gap: 5px; margin-top: auto; padding-top: 10px; font-size: 0.82rem; font-weight: 600; color: var(--accent); background: #ecfdf5; border: none; border-radius: 100px; padding: 6px 13px; cursor: pointer; transition: background 0.18s; font-family: 'DM Sans', sans-serif; }
+    .card-ver-mais:hover { background: #d1fae5; }
 
     /* SKELETON */
     .skeleton { background: linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 8px; }
@@ -266,7 +268,10 @@
         <div class="card-body">
           <span class="card-badge ${badgeCls}">${badgeName}</span>
           <div class="card-name">${p.name}</div>
-          <div class="card-price">${p.price || ''}</div>
+          <button class="card-ver-mais">
+            Ver mais
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
         </div>`;
       div.addEventListener('click', () => openModal(p));
       grid.appendChild(div);

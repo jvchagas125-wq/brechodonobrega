@@ -167,8 +167,8 @@
 
 <script type="module">
   import { initializeApp }                      from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-  import { getFirestore, doc, getDoc,
-           collection, getDocs }                from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+  import { getFirestore, doc, collection,
+           onSnapshot }                         from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyANzwY6aNR7DfjNybjHQUN9AJ-dgnc_nAc",
@@ -184,71 +184,77 @@
 
   const colorMap = { green:'badge-green', amber:'badge-amber', blue:'badge-blue', purple:'badge-purple', red:'badge-red', gray:'badge-gray' };
 
-  let phone = '5522999649966';
+  let phone      = '5522999649966';
   let categories = [];
+  let products   = [];
   let imgs = [], idx = 0, txStart = 0, txEnd = 0;
 
-  // ── LOAD ──────────────────────────────────────────────────────
-  const [settingsSnap, catsSnap, prodsSnap] = await Promise.all([
-    getDoc(doc(db, 'settings', 'main')),
-    getDocs(collection(db, 'categories')),
-    getDocs(collection(db, 'products')),
-  ]);
+  // ── RENDER FUNCTIONS ──────────────────────────────────────────
 
-  // Settings
-  if (settingsSnap.exists()) {
-    const d = settingsSnap.data();
-    document.getElementById('site-title').textContent    = d.header?.title        || 'Vitrine de Produtos';
-    document.getElementById('site-subtitle').textContent = d.header?.subtitle     || '';
-    document.getElementById('section-title').textContent = d.header?.sectionTitle || 'Produtos à venda';
-    document.getElementById('contact-title').textContent = d.contact?.title       || 'Entre em Contato';
-    document.getElementById('contact-text').innerHTML    = (d.contact?.text || '').replace(/\n/g,'<br>');
-    document.getElementById('contact-btn-text').textContent = d.contact?.btnText  || 'Chamar no WhatsApp';
+  function renderSettings(d) {
+    document.getElementById('site-title').textContent       = d.header?.title        || 'Vitrine de Produtos';
+    document.getElementById('site-subtitle').textContent    = d.header?.subtitle     || '';
+    document.getElementById('section-title').textContent    = d.header?.sectionTitle || 'Produtos à venda';
+    document.getElementById('contact-title').textContent    = d.contact?.title       || 'Entre em Contato';
+    document.getElementById('contact-text').innerHTML       = (d.contact?.text || '').replace(/\n/g,'<br>');
+    document.getElementById('contact-btn-text').textContent = d.contact?.btnText     || 'Chamar no WhatsApp';
     phone = d.contact?.phone || phone;
     document.getElementById('contact-btn').href = `https://wa.me/${phone}`;
   }
 
-  // Categories
-  categories = catsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-  categories.sort((a,b) => (a.order||0) - (b.order||0));
+  function renderFilters() {
+    const activeBtn = document.querySelector('#filters-bar .filter-btn.active');
+    const activeCat = activeBtn ? activeBtn.dataset.category : 'all';
 
-  // Filters
-  const filtersBar = document.getElementById('filters-bar');
-  filtersBar.innerHTML = '<button class="filter-btn active" data-category="all">Todos</button>';
-  categories.forEach(cat => {
-    const btn = document.createElement('button');
-    btn.className = 'filter-btn';
-    btn.dataset.category = cat.id;
-    btn.textContent = cat.name;
-    filtersBar.appendChild(btn);
-  });
-  filtersBar.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      filtersBar.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const cat = btn.dataset.category;
-      document.querySelectorAll('.product-card').forEach(c => {
-        c.style.display = (cat === 'all' || c.dataset.category === cat) ? '' : 'none';
+    const filtersBar = document.getElementById('filters-bar');
+    filtersBar.innerHTML = '<button class="filter-btn" data-category="all">Todos</button>';
+    categories.forEach(cat => {
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn';
+      btn.dataset.category = cat.id;
+      btn.textContent = cat.name;
+      filtersBar.appendChild(btn);
+    });
+
+    // Restore active filter or fallback to 'all'
+    const toActivate = filtersBar.querySelector(`[data-category="${activeCat}"]`)
+                    || filtersBar.querySelector('[data-category="all"]');
+    toActivate?.classList.add('active');
+
+    filtersBar.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        filtersBar.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        applyFilter(btn.dataset.category);
       });
     });
-  });
+  }
 
-  // Products
-  const products = prodsSnap.docs.map(d => ({ id: d.id, ...d.data() }))
-    .filter(p => p.active)
-    .sort((a,b) => (a.order||0) - (b.order||0));
+  function applyFilter(cat) {
+    document.querySelectorAll('.product-card').forEach(c => {
+      c.style.display = (cat === 'all' || c.dataset.category === cat) ? '' : 'none';
+    });
+  }
 
-  const grid = document.getElementById('product-grid');
-  grid.innerHTML = '';
+  function renderProducts() {
+    const activeBtn = document.querySelector('#filters-bar .filter-btn.active');
+    const activeCat = activeBtn ? activeBtn.dataset.category : 'all';
 
-  if (!products.length) {
-    grid.innerHTML = '<p style="color:var(--sub);text-align:center;padding:40px 0;grid-column:1/-1;">Nenhum produto disponível no momento.</p>';
-  } else {
-    products.forEach(p => {
-      const cat = categories.find(c => c.id === p.category);
+    const grid = document.getElementById('product-grid');
+    grid.innerHTML = '';
+
+    const active = products.filter(p => p.active).sort((a,b) => (a.order||0) - (b.order||0));
+
+    if (!active.length) {
+      grid.innerHTML = '<p style="color:var(--sub);text-align:center;padding:40px 0;grid-column:1/-1;">Nenhum produto disponível no momento.</p>';
+      return;
+    }
+
+    active.forEach(p => {
+      const cat       = categories.find(c => c.id === p.category);
       const badgeCls  = cat ? (colorMap[cat.color] || 'badge-gray') : 'badge-gray';
       const badgeName = cat ? cat.name : (p.category || '');
-      const thumbHTML = p.imgs && p.imgs[0]
+      const thumbHTML = p.imgs?.[0]
         ? `<img src="${p.imgs[0]}" alt="${p.name}" loading="lazy">`
         : `<div class="card-placeholder"><svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>Sem foto</div>`;
 
@@ -265,7 +271,30 @@
       div.addEventListener('click', () => openModal(p));
       grid.appendChild(div);
     });
+
+    applyFilter(activeCat);
   }
+
+  // ── REAL-TIME LISTENERS ───────────────────────────────────────
+
+  // 1. Settings
+  onSnapshot(doc(db, 'settings', 'main'), snap => {
+    if (snap.exists()) renderSettings(snap.data());
+  });
+
+  // 2. Categories
+  onSnapshot(collection(db, 'categories'), snap => {
+    categories = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    categories.sort((a,b) => (a.order||0) - (b.order||0));
+    renderFilters();
+    renderProducts();
+  });
+
+  // 3. Products
+  onSnapshot(collection(db, 'products'), snap => {
+    products = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderProducts();
+  });
 
   // ── MODAL ─────────────────────────────────────────────────────
   function showImg(i) {

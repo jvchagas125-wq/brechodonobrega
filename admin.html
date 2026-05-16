@@ -608,7 +608,10 @@
 
   const CLOUD_NAME    = 'dcvhqnr1c';
   const UPLOAD_PRESET = 'vitrine_de_produtos';
-  const ALLOWED_UID   = 'WW3sIeN4V9MaGgS2Qf9oSTqmQY73';
+  const ALLOWED_UIDS = [
+    'WW3sIeN4V9MaGgS2Qf9oSTqmQY73',   // brechodonobrega@gmail.com
+    'dFQrbZM7AoTpesw9AAF3KSayyD32',   // lmnpessoal@gmail.com
+  ];
 
   const colorMap = { green:'badge-green', amber:'badge-amber', blue:'badge-blue', purple:'badge-purple', red:'badge-red', gray:'badge-gray' };
 
@@ -673,7 +676,7 @@
 
   // ── AUTH ──────────────────────────────────────────────────────
   onAuthStateChanged(auth, user => {
-    if (user && user.uid === ALLOWED_UID) {
+    if (user && ALLOWED_UIDS.includes(user.uid)) {
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('admin-screen').style.display = 'block';
       loadAll();
@@ -695,7 +698,7 @@
 
     try {
       const cred = await signInWithEmailAndPassword(auth, email, password);
-      if (cred.user.uid !== ALLOWED_UID) {
+      if (!ALLOWED_UIDS.includes(cred.user.uid)) {
         await signOut(auth);
         errEl.textContent = 'Acesso não autorizado.';
         errEl.style.display = 'block';

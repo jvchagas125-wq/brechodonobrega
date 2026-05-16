@@ -777,7 +777,9 @@
       document.getElementById('c-btn-text').value = d.contact?.btnText     || '';
       // Diferenciais
       const saved = d.diferenciais;
-      if (saved && saved.length) diferenciais = saved;
+      if (Array.isArray(saved)) {
+        diferenciais = saved; // respeita mesmo se vazio
+      }
       renderDiferenciais();
     } else {
       await setDoc(doc(db, 'settings', 'main'), {

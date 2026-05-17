@@ -4,6 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Brechó do Nóbrega</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#059669">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Brechó do Nóbrega">
+  <link rel="apple-touch-icon" href="/icon-512.svg">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -328,6 +335,30 @@
 
     @keyframes modalIn { from{opacity:0;transform:scale(0.9) translateY(20px);} to{opacity:1;transform:scale(1) translateY(0);} }
     @media (max-width:500px) { .gallery-wrap{height:230px;} .modal-body{padding:14px 16px 22px;} #modal-name{font-size:1.1rem;} }
+
+    /* ══ INSTALL BTN ══ */
+    #install-btn {
+      display: none;
+      position: fixed;
+      bottom: 24px; left: 50%; transform: translateX(-50%);
+      z-index: 999;
+      background: var(--dark2);
+      color: #fff;
+      border: 1px solid rgba(52,211,153,0.3);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem; font-weight: 600;
+      padding: 11px 20px;
+      border-radius: 100px;
+      cursor: pointer;
+      display: none;
+      align-items: center; gap: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      transition: all 0.2s;
+      white-space: nowrap;
+      animation: fadeUp 0.4s ease both;
+    }
+    #install-btn:hover { background: #059669; border-color: #059669; transform: translateX(-50%) translateY(-2px); }
+    #install-btn svg { flex-shrink: 0; }
   </style>
 </head>
 <body>
@@ -425,6 +456,44 @@
     </div>
   </div>
 </div>
+
+<!-- ══ INSTALL BTN ══ -->
+<button id="install-btn" aria-label="Instalar App">
+  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <path d="M12 15V3m0 12l-4-4m4 4l4-4"/><path d="M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17"/>
+  </svg>
+  Instalar App
+</button>
+
+<script>
+  // Service Worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
+
+  // PWA Install
+  let deferredPrompt = null;
+  const installBtn = document.getElementById('install-btn');
+
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.style.display = 'flex';
+  });
+
+  installBtn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') installBtn.style.display = 'none';
+    deferredPrompt = null;
+  });
+
+  window.addEventListener('appinstalled', () => {
+    installBtn.style.display = 'none';
+    deferredPrompt = null;
+  });
+</script>
 
 <script type="module">
   import { initializeApp }        from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";

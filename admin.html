@@ -1055,7 +1055,9 @@
   // ── PRODUCT MODAL ─────────────────────────────────────────────
   function populateCategorySelect(selectedId) {
     const sel = document.getElementById('edit-category');
-    sel.innerHTML = categories.map(c => `<option value="${c.id}" ${c.id===selectedId?'selected':''}>${c.name}</option>`).join('');
+    sel.innerHTML = `<option value="">— Sem categoria —</option>` +
+      categories.map(c => `<option value="${c.id}" ${c.id===selectedId?'selected':''}>${c.name}</option>`).join('');
+    if (!selectedId) sel.value = '';
   }
 
   window.openProductModal = function(id) {

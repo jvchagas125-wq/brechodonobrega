@@ -1,6 +1,6 @@
 {
   "name": "Admin – Brechó do Nóbrega",
-  "short_name": "Brechó Admin",
+  "short_name": "BN Admin",
   "description": "Painel administrativo do Brechó do Nóbrega",
   "start_url": "/admin",
   "display": "standalone",

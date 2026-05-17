@@ -219,24 +219,39 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* ── INSTALL BTN ── */
-    #install-btn {
+    #install-wrap {
       display: none;
       position: fixed;
       bottom: 24px; left: 50%; transform: translateX(-50%);
       z-index: 999;
+      align-items: center; gap: 0;
+    }
+    #install-btn {
       background: var(--dark);
       color: #fff;
       border: 1px solid rgba(5,150,105,0.35);
+      border-right: none;
       font-family: 'DM Sans', sans-serif;
       font-size: 0.82rem; font-weight: 600;
-      padding: 11px 20px; border-radius: 100px;
-      cursor: pointer;
-      align-items: center; gap: 8px;
+      padding: 11px 20px; border-radius: 100px 0 0 100px;
+      cursor: pointer; display: flex; align-items: center; gap: 8px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-      transition: all 0.2s;
-      white-space: nowrap;
+      transition: all 0.2s; white-space: nowrap;
     }
-    #install-btn:hover { background: var(--accent); border-color: var(--accent); transform: translateX(-50%) translateY(-2px); }
+    #install-btn:hover { background: var(--accent); border-color: var(--accent); }
+    #install-dismiss {
+      background: var(--dark);
+      color: rgba(255,255,255,0.5);
+      border: 1px solid rgba(5,150,105,0.35);
+      border-left: 1px solid rgba(255,255,255,0.1);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem; font-weight: 600;
+      padding: 11px 14px; border-radius: 0 100px 100px 0;
+      cursor: pointer; display: flex; align-items: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      transition: all 0.2s; line-height: 1;
+    }
+    #install-dismiss:hover { color: #fff; background: #374151; }
 
     /* ── HAMBURGER ── */
     .hamburger {
@@ -613,33 +628,42 @@
 <div class="toast" id="toast"></div>
 
 <!-- ══ INSTALL BTN ══ -->
-<button id="install-btn" aria-label="Instalar App">
-  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-    <path d="M12 15V3m0 12l-4-4m4 4l4-4"/><path d="M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17"/>
-  </svg>
-  Instalar App
-</button>
+<div id="install-wrap" aria-label="Instalar App">
+  <button id="install-btn">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path d="M12 15V3m0 12l-4-4m4 4l4-4"/><path d="M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17"/>
+    </svg>
+    Instalar App
+  </button>
+  <button id="install-dismiss" aria-label="Fechar">✕</button>
+</div>
 
 <script>
   let deferredPrompt = null;
-  const installBtn = document.getElementById('install-btn');
+  const installWrap    = document.getElementById('install-wrap');
+  const installBtn     = document.getElementById('install-btn');
+  const installDismiss = document.getElementById('install-dismiss');
 
   window.addEventListener('beforeinstallprompt', e => {
     e.preventDefault();
     deferredPrompt = e;
-    installBtn.style.display = 'flex';
+    installWrap.style.display = 'flex';
   });
 
   installBtn.addEventListener('click', async () => {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') installBtn.style.display = 'none';
+    if (outcome === 'accepted') installWrap.style.display = 'none';
     deferredPrompt = null;
   });
 
+  installDismiss.addEventListener('click', () => {
+    installWrap.style.display = 'none';
+  });
+
   window.addEventListener('appinstalled', () => {
-    installBtn.style.display = 'none';
+    installWrap.style.display = 'none';
     deferredPrompt = null;
   });
 </script>

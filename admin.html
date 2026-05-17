@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin – Brechó do Nóbrega</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#1a1a2e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Admin – Brechó">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -210,6 +215,26 @@
 
     @keyframes slideUp { from { opacity:0; transform: translateY(16px); } to { opacity:1; transform: none; } }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── INSTALL BTN ── */
+    #install-btn {
+      display: none;
+      position: fixed;
+      bottom: 24px; left: 50%; transform: translateX(-50%);
+      z-index: 999;
+      background: var(--dark);
+      color: #fff;
+      border: 1px solid rgba(5,150,105,0.35);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem; font-weight: 600;
+      padding: 11px 20px; border-radius: 100px;
+      cursor: pointer;
+      align-items: center; gap: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    #install-btn:hover { background: var(--accent); border-color: var(--accent); transform: translateX(-50%) translateY(-2px); }
 
     /* ── HAMBURGER ── */
     .hamburger {
@@ -584,6 +609,38 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- ══ INSTALL BTN ══ -->
+<button id="install-btn" aria-label="Instalar App">
+  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <path d="M12 15V3m0 12l-4-4m4 4l4-4"/><path d="M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17"/>
+  </svg>
+  Instalar App
+</button>
+
+<script>
+  let deferredPrompt = null;
+  const installBtn = document.getElementById('install-btn');
+
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.style.display = 'flex';
+  });
+
+  installBtn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') installBtn.style.display = 'none';
+    deferredPrompt = null;
+  });
+
+  window.addEventListener('appinstalled', () => {
+    installBtn.style.display = 'none';
+    deferredPrompt = null;
+  });
+</script>
 
 <script type="module">
   import { initializeApp }                              from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";

@@ -9,7 +9,7 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/icon-512.svg",
+      "src": "https://res.cloudinary.com/dcvhqnr1c/image/upload/q_auto/f_auto/v1779039799/icon-512_zmkmye.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"

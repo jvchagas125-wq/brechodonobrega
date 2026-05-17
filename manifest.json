@@ -1,8 +1,9 @@
 {
   "name": "Brechó do Nóbrega",
-  "short_name": "BN Produtos",
+  "short_name": "Brechó",
   "description": "Vitrine de produtos do Brechó do Nóbrega",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0f0f1a",
   "theme_color": "#059669",

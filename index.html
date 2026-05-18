@@ -49,6 +49,7 @@
       background-size: 400% 400%;
       animation: gradientShift 12s ease infinite;
       z-index: 0;
+      will-change: background-position;
     }
 
     @keyframes gradientShift {
@@ -61,11 +62,12 @@
     .orb {
       position: absolute;
       border-radius: 50%;
-      filter: blur(60px);
-      opacity: 0.35;
+      filter: blur(80px);
+      opacity: 0.25;
       animation: floatOrb linear infinite;
       pointer-events: none;
       z-index: 1;
+      will-change: transform;
     }
     .orb-1 { width: 320px; height: 320px; background: #059669; top: -80px; left: -80px; animation-duration: 18s; }
     .orb-2 { width: 260px; height: 260px; background: #3b82f6; bottom: -60px; right: -60px; animation-duration: 22s; animation-delay: -8s; }
@@ -238,7 +240,7 @@
       position: relative; height: 210px;
       overflow: hidden; background: #f3f4f6;
     }
-    .card-img-wrap img { width:100%;height:100%;object-fit:contain;display:block;transition:transform 0.4s;background:#f3f4f6; }
+    .card-img-wrap img { width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.35s;will-change:transform; }
     .product-card:hover .card-img-wrap img { transform: scale(1.06); }
     .card-placeholder { width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#d1d5db;font-size:0.78rem; }
 
@@ -284,7 +286,7 @@
     .modal-close:hover { background:#f3f4f6;transform:scale(1.1); }
 
     .gallery-wrap { position:relative;height:280px;background:#f3f4f6;overflow:hidden; }
-    #modal-main-img { width:100%;height:100%;object-fit:contain;display:none;user-select:none;-webkit-user-select:none;cursor:zoom-in; }
+    #modal-main-img { width:100%;height:100%;object-fit:cover;display:none;user-select:none;-webkit-user-select:none;cursor:zoom-in; }
     .gallery-empty { width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#9ca3af;font-size:0.82rem; }
     .gallery-nav { position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.88);border:none;color:#374151;width:38px;height:38px;border-radius:50%;display:none;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,0.14);transition:all 0.15s; }
     .gallery-nav:hover { background:#fff;transform:translateY(-50%) scale(1.08); }
@@ -294,14 +296,20 @@
 
     /* Expand button */
     #gallery-expand {
-      position: absolute; bottom: 12px; right: 12px;
-      background: rgba(0,0,0,0.55); border: none; color: #fff;
-      width: 34px; height: 34px; border-radius: 8px;
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: rgba(0,0,0,0.42);
+      border: none; color: rgba(255,255,255,0.85);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.72rem; font-weight: 500;
+      letter-spacing: 0.03em;
+      padding: 7px 12px;
       display: none; align-items: center; justify-content: center;
-      cursor: pointer; transition: background 0.18s; z-index: 5;
+      gap: 6px; cursor: pointer;
+      transition: background 0.18s;
+      z-index: 5;
     }
     #gallery-expand.visible { display: flex; }
-    #gallery-expand:hover { background: rgba(0,0,0,0.8); }
+    #gallery-expand:hover { background: rgba(0,0,0,0.65); color: #fff; }
 
     .gallery-dots { position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:6px; }
     .dot-btn { width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.5);border:none;cursor:pointer;padding:0;transition:all 0.18s; }
@@ -388,6 +396,21 @@
 
     @keyframes modalIn { from{opacity:0;transform:scale(0.9) translateY(20px);} to{opacity:1;transform:scale(1) translateY(0);} }
     @media (max-width:500px) { .gallery-wrap{height:230px;} .modal-body{padding:14px 16px 22px;} #modal-name{font-size:1.1rem;} }
+
+    /* ══ MOBILE PERFORMANCE ══ */
+    @media (max-width: 768px) {
+      /* Disable heavy animations on mobile */
+      .orb { animation: none !important; }
+      .hero-bg { animation: none !important; background: linear-gradient(135deg, #0f0f1a 0%, #1a2e1a 100%) !important; }
+      .contact-bg { animation: none !important; background: linear-gradient(135deg, #0f0f1a 0%, #0d2018 100%) !important; }
+      .hero-grid { display: none; }
+      .hero-line { animation: none !important; opacity: 0.4; }
+      /* Reduce card hover on touch */
+      .product-card:hover { transform: none; }
+      /* Faster transitions */
+      .product-card { transition: box-shadow 0.15s; }
+      .card-img-wrap img { transition: none; }
+    }
 
     /* ══ INSTALL BTN ══ */
     #install-wrap {
@@ -500,7 +523,8 @@
       <button class="gallery-nav" id="gallery-prev"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
       <button class="gallery-nav" id="gallery-next"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></button>
       <button id="gallery-expand" title="Ampliar foto">
-        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+        Clique aqui para ampliar a foto
       </button>
       <div class="gallery-dots" id="gallery-dots"></div>
     </div>

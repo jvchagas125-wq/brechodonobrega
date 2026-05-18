@@ -11,7 +11,10 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Brechó do Nóbrega">
   <link rel="apple-touch-icon" href="https://res.cloudinary.com/dcvhqnr1c/image/upload/q_auto/f_auto/v1779039799/icon-512_zmkmye.svg">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -189,7 +192,7 @@
     .stat strong { color: var(--text); font-weight: 700; display: block; font-size: 0.9rem; }
 
     /* ══ MAIN ════════════════════════════════════════════════════ */
-    main { max-width: 1140px; margin: 0 auto; padding: 0 clamp(16px,4vw,36px) 80px; }
+    main { max-width: 1140px; margin: 0 auto; padding: 0 clamp(16px,4vw,36px) 80px; content-visibility: auto; }
 
     .section-header {
       text-align: center;
@@ -244,14 +247,17 @@
     .product-card:hover .card-img-wrap img { transform: scale(1.06); }
     .card-placeholder { width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#d1d5db;font-size:0.78rem; }
 
-    /* Shine effect on hover */
-    .card-img-wrap::after {
-      content: '';
-      position: absolute; inset: 0;
-      background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
-      opacity: 0; transition: opacity 0.3s;
+    /* Shine effect on hover - desktop only */
+    @media (hover: hover) {
+      .card-img-wrap::after {
+        content: '';
+        position: absolute; inset: 0;
+        background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 60%);
+        opacity: 0; transition: opacity 0.3s;
+        pointer-events: none;
+      }
+      .product-card:hover .card-img-wrap::after { opacity: 1; }
     }
-    .product-card:hover .card-img-wrap::after { opacity: 1; }
 
     .card-body { padding: 16px 18px 20px; flex:1; display:flex; flex-direction:column; align-items:flex-start; }
     .card-badge { display:inline-block;width:fit-content;font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;margin-bottom:7px;letter-spacing:0.04em; }
@@ -419,17 +425,31 @@
 
     /* ══ MOBILE PERFORMANCE ══ */
     @media (max-width: 768px) {
-      /* Disable heavy animations on mobile */
-      .orb { animation: none !important; }
-      .hero-bg { animation: none !important; background: linear-gradient(135deg, #0f0f1a 0%, #1a2e1a 100%) !important; }
-      .contact-bg { animation: none !important; background: linear-gradient(135deg, #0f0f1a 0%, #0d2018 100%) !important; }
-      .hero-grid { display: none; }
-      .hero-line { animation: none !important; opacity: 0.4; }
-      /* Reduce card hover on touch */
-      .product-card:hover { transform: none; }
-      /* Faster transitions */
-      .product-card { transition: box-shadow 0.15s; }
-      .card-img-wrap img { transition: none; }
+      /* Kill ALL animations and transitions */
+      .orb { display: none !important; }
+      .hero-bg {
+        animation: none !important;
+        background: linear-gradient(160deg, #0f0f1a 0%, #0d2018 50%, #1a1a2e 100%) !important;
+        will-change: auto !important;
+      }
+      .contact-bg { animation: none !important; background: linear-gradient(160deg, #0f0f1a 0%, #0d2018 100%) !important; will-change: auto !important; }
+      .contact-orb-1, .contact-orb-2 { display: none !important; }
+      .hero-grid { display: none !important; }
+      .hero-line { display: none !important; }
+      .hero-badge::before { animation: none !important; }
+      /* Remove all card animations on touch */
+      .product-card { transition: none !important; }
+      .product-card:hover { transform: none !important; box-shadow: var(--shadow) !important; }
+      .card-img-wrap img { transition: none !important; }
+      .card-img-wrap::after { display: none !important; }
+      /* Reduce header size on mobile */
+      header { min-height: clamp(240px, 50vw, 340px) !important; }
+      /* Remove box shadows on cards for faster paint */
+      .product-card { box-shadow: 0 1px 6px rgba(0,0,0,0.08) !important; }
+      /* Skeleton faster */
+      .skeleton { animation-duration: 1s !important; }
+      /* No transition on filters */
+      .filter-btn { transition: none !important; }
     }
 
     /* ══ INSTALL BTN ══ */
@@ -506,11 +526,7 @@
     <p>Clique em qualquer produto para ver detalhes e entrar em contato</p>
   </div>
   <div class="filters" id="filters-bar"></div>
-  <div id="product-grid">
-    <div style="height:290px;border-radius:16px;" class="skeleton"></div>
-    <div style="height:290px;border-radius:16px;" class="skeleton"></div>
-    <div style="height:290px;border-radius:16px;" class="skeleton"></div>
-  </div>
+  <div id="product-grid" style="min-height:280px;"></div>
 </main>
 
 <!-- ══ CONTACT ══ -->
@@ -741,13 +757,12 @@
            </div>`
         : '';
       const thumbHTML = p.imgs?.[0]
-        ? `<img src="${p.imgs[0]}" alt="${p.name}" loading="lazy" style="${p.sold?'filter:grayscale(0.4);':''}">`
+        ? `<img src="${p.imgs[0]}" alt="${p.name}" loading="lazy" decoding="async" style="${p.sold?'filter:grayscale(0.4);':''}">`
         : `<div class="card-placeholder"><svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>Sem foto</div>`;
 
       const div = document.createElement('div');
       div.className = 'product-card';
       div.dataset.category = p.category || '';
-      div.style.animationDelay = `${i * 0.05}s`;
       div.innerHTML = `
         <div class="card-img-wrap">${thumbHTML}${soldOverlay}</div>
         <div class="card-body">
